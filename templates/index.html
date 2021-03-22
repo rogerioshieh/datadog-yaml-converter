@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Online conf.yaml to Datadog AD template Parser</title>
+    <style>
+      body {
+        font-family: NationalWeb,Helvetica,Arial,sans-serif;
+        text-align: center;
+      }
+      #left {
+        float: left;
+        width: 500px;
+      }
+      #yaml {
+        width: 100%;
+        border: 1px solid #aaa;
+        min-height: 500px;
+        padding: 5px;
+        margin-bottom: 10px;
+      }
+      .content {
+        margin: 10px auto;
+        width: 1000px;
+      }
+      #output {
+        overflow-x: auto;
+      }
+      #output, #yaml {
+        font-family: monospace;
+      }
+      .help {
+        background: #d6d6d6;
+        margin: 5px;
+        padding: 5px;
+      }
+      #right {
+        float: right;
+      }
+      .examples, .code {
+        text-align: left;
+        padding: 30px;
+        margin-bottom: 10px;
+        border: 1px solid #aaa;
+        width: 420px;
+      }
+      .examples {
+        margin-top: 10px;
+      }
+      h1, h2 {
+        margin: 0;
+      }
+      h1 {
+        border-bottom: 1px solid #aaa;
+        margin-bottom: 10px;
+      }
+      .header, .footer {
+        font-family: NationalWeb,Helvetica,Arial,sans-serif;
+        color: #6f42c1;
+        text-align: center;
+      }
+      .clear {
+        clear: both;
+      }
+      a:visited, a, a:hover {
+        color: #00c;
+      }
+      a {
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      #url_form input[name=url] {
+        width: 75%;
+      }
+      .error {
+        color: #f00;
+      }
+    </style>
+
+  </head>
+  <body>
+    <div class="content">
+      <div class="header">
+        <h1>Online conf.yaml to Datadog AD template Parser</h1>
+      </div>
+
+      <div id="left">
+        <form method="POST">   
+          <div>
+            Output:
+            <div>
+            <input type="radio" name="type" id="dockerfile" value="dockerfile" checked>
+            <label for="dockerfile">Dockerfile AD</label>
+
+            <input type="radio" name="type" id="docker_compose" value="docker_compose">
+            <label for="docker_compose">docker-compose AD</label>
+            </div>
+            <div>
+            <input type="radio" name="type" id="docker_run" value="docker_run">
+            <label for="docker_run">docker run command AD</label>
+            
+            <input type="radio" name="type" id="kubernetes" value="kubernetes">
+            <label for="kubernetes">Kubernetes AD</label>
+            </div>
+          </div>  
+          <br>  
+          <div>
+          Integration name: <input name="check_name" id="check_name" placeholder="e.g.: Redis" class="yaml">
+        </div>
+        <div>
+          Container Identifier: <input name="container_id" id="container_id" placeholder="your container name here" class="yaml">
+        </div>
+        <br>
+        <div>
+          <textarea name="input_text" id="input_text" placeholder="your yaml here" class="yaml"></textarea>
+        </div>
+
+        <input type="radio" onchange="hideB(this)" name="extra_check" checked>No 
+        <input type="radio" id="extra_check" onchange="hideA(this)" name="extra_check">Yes
+        <div id="A">
+          <br/></div>
+        <div id="B" style="visibility:hidden">
+          <br/> 
+          <div>
+            Integration name: <input name="extra_check_name" id="extra_check_name" placeholder="e.g.: httpd" class="yaml">
+          
+          </div>
+          <br>
+          <textarea name="input_text" id="extra_input_text" placeholder="Your extra check yaml here:" class="yaml"></textarea></div>
+
+        </form>
+      </div>
+      <div id="right">
+        <div class="code">
+          <h2>Output</h2>
+          <pre id="output">{{ output_text }}</pre>
+        </div>
+      </div>
+      <br>
+      <div>
+        <button type="submit" id="convert">CONVERT</button>
+      </div>
+      <br>
+      <div class="footer">
+       Footer. Created by Rogério Shieh</a>. <a href="placeholder">Placeholder</a>.
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+  function hideA(x) {
+   if (x.checked) {
+     document.getElementById("A").style.visibility = "hidden";
+     document.getElementById("B").style.visibility = "visible";
+   }
+ }
+ function hideB(x) {
+   if (x.checked) {
+     document.getElementById("B").style.visibility = "hidden";
+     document.getElementById("A").style.visibility = "visible";
+   }
+ }
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('button').forEach(button => {
+            button.onclick = () => {
+                const request = new XMLHttpRequest();
+                request.open('POST', `/convert`);
+                request.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+                var input_text=document.getElementById("input_text").value;
+                
+            
+                if(document.getElementById('dockerfile').checked) {
+                  var type=document.getElementById("dockerfile").value;
+                }else if(document.getElementById('docker_compose').checked) {
+                  var type=document.getElementById("docker_compose").value;
+                }else if(document.getElementById('docker_run').checked) {
+                  var type=document.getElementById("docker_run").value;
+                }else if(document.getElementById('kubernetes').checked) {
+                  var type=document.getElementById("kubernetes").value;
+                }
+
+                if(document.getElementById('extra_check').checked) {
+                var extra_input_text=document.getElementById("extra_input_text").value;
+                var extra_check=document.getElementById("extra_check_name").value;
+                }
+                
+                var check=document.getElementById("check_name").value;
+                var container_id=document.getElementById("container_id").value;
+
+                var postVars = 'input_text='+input_text+'&req_type='+type+'&check_name='+check+'&container_id='+container_id+'&extra_input_text='+extra_input_text+'&extra_check_name='+extra_check;
+                request.onload = () => {
+                    const response = request.responseText;
+                    document.getElementById('output').innerHTML = response;
+                }; 
+                request.send(postVars);
+            };
+        });
+    });
+</script>
+
+  </body>
+</html>
